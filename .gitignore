@@ -1,0 +1,3 @@
+# file which have to avoid tracking
+
+node_modules/
