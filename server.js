@@ -1,5 +1,6 @@
 const express= require ("express");
 const db=require('./db');
+require('dotenv').config();
 const person=require('./models/Person');
 const bodyParser=require('body-parser');
 
@@ -38,6 +39,7 @@ const personRoutes=require('./routes/personRoutes');
 //middleware
 app.use('/',personRoutes);
 
-app.listen(3000,()=>{
+const port=process.env.PORT ||3000;
+app.listen(port,()=>{
   console.log("server running on 3000");
 })
