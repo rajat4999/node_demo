@@ -4,11 +4,46 @@ require('dotenv').config();
 const person=require('./models/Person');
 const bodyParser=require('body-parser');
 
+const passport= require('passport');
+// passport local is username -password based authentication also called local strategy 
+const LocalPassport=require('passport-local').Strategy;
+ 
 const app=express();
+
+// middleware functions
+
+const logRequest=(req,res,next)=>{
+  console.log(`[${new Date().toLocaleString()}] requets send to :${req.originalUrl}`);
+  next();  //it indicates working of current middleware is done. tranfer to next routes or next middleware
+}
+
+app.use(logRequest);
+
+// passport authentication
+passport.use(new LocalPassport( async (userN,pass,done)=>{
+ try{
+   console.log('credential: ',userN,pass);
+    const user=await person.findOne({email:userN});
+    if(!user)
+      done(null,false,{message: 'inalid usename'});
+    const isMatch=user.password===pass?true:false;
+    if(isMatch){
+      done(null,user);
+    }
+    else done(null,false,{message:'incorrect user'});
+ }
+ catch(err){
+  return done(err);
+ }
+}));
+
+app.use(passport.initialize());
+
+
 
 // middleware
 app.use(bodyParser.json());  //req.body
-app.get('/',(req,res)=>{
+app.get('/',passport.authenticate('local',{session:false}),(req,res)=>{
   res.send("welcome to the home page")
 });
 app.get('/idli',(req,res)=>{
@@ -38,6 +73,7 @@ const personRoutes=require('./routes/personRoutes');
 
 //middleware
 app.use('/',personRoutes);
+
 
 const port=process.env.PORT ||3000;
 app.listen(port,()=>{

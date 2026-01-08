@@ -20,7 +20,12 @@ const personSchema=new mongoose.Schema({
     type:String,
     enum:['chef','manager','waiter','owner'],
     required:true
+  },
+  password:{
+    type:String,
+    required:true
   }
+
 });
 
 // creating model
