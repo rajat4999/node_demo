@@ -1,18 +1,29 @@
 const express=require('express')
 const router=express.Router();
 const person=require('./../models/Person');
+const {jwtAuthMiddleware,generateToken}=require('./../jwt');
 
 // use of express router
 
 // use of async and await  with the use of try and catch
-router.post('/person',async(req,res)=>{
+router.post('/signup',async(req,res)=>{
   try{ 
     const data=req.body;
     const newPerson=new person(data);
 
     const response= await newPerson.save();
     console.log("data saved");
-    res.status(200).json(response);
+
+    const payload={
+      id:response.id,
+      username:response.username
+    }
+
+    const token=generateToken(payload,process.env.JWT_SECRET);
+
+    res.status(200).json({response:response,
+      token:token
+    });
   }
   catch(err){
     console.log(err);
@@ -20,9 +31,33 @@ router.post('/person',async(req,res)=>{
   }
 });
 
+
+// login using token
+router.post('/login',async(req,res)=>{
+  try{
+    const {username,password}=req.body;
+    const user=await person.findOne({username:username});
+    if(!user || !await(user.comparePassword(password))){
+      return res.status(401).json({error:"invalid username or password"});
+    }
+
+    const payload={
+      id:user.id,
+      username:user.username
+    }
+    const token=generateToken(payload);
+    res.json({token});
+
+  }
+  catch(err){
+    console.log(err);
+    res.status(500).json({error:'server error'});
+  }
+})
+
 // get all data
 
-router.get('/show',async (req,res)=>{
+router.get('/show',jwtAuthMiddleware,async (req,res)=>{
   try{
     const data=await person.find();
     res.status(200).json(data);

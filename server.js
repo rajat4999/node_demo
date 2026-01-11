@@ -3,10 +3,8 @@ const db=require('./db');
 require('dotenv').config();
 const person=require('./models/Person');
 const bodyParser=require('body-parser');
+const passport=require('./auth');
 
-const passport= require('passport');
-// passport local is username -password based authentication also called local strategy 
-const LocalPassport=require('passport-local').Strategy;
  
 const app=express();
 
@@ -19,23 +17,6 @@ const logRequest=(req,res,next)=>{
 
 app.use(logRequest);
 
-// passport authentication
-passport.use(new LocalPassport( async (userN,pass,done)=>{
- try{
-   console.log('credential: ',userN,pass);
-    const user=await person.findOne({email:userN});
-    if(!user)
-      done(null,false,{message: 'inalid usename'});
-    const isMatch=user.password===pass?true:false;
-    if(isMatch){
-      done(null,user);
-    }
-    else done(null,false,{message:'incorrect user'});
- }
- catch(err){
-  return done(err);
- }
-}));
 
 app.use(passport.initialize());
 
